@@ -10,10 +10,7 @@
 
 #define MAX_PGM_VALUE (UINT16_MAX)
 
-typedef enum {
-    P2,
-    P5,
-} PGMType;
+typedef enum { P2, P5 } PGMType;
 
 typedef struct {
     uint16_t *data;
@@ -40,4 +37,4 @@ int InitPGM(PGM *pgm, uint16_t width, uint16_t height);
 int GetPGMPixelNormalized(PGM *pgm, uint16_t row, uint16_t column,
                           uint16_t *pixel);
 
-#endif  // CONVOLUTION_PGM_H_
+#endif /* CONVOLUTION_PGM_H_ */

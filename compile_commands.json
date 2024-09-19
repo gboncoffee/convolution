@@ -1,0 +1,18 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-ansi",
+      "-pedantic",
+      "-c",
+      "-o",
+      "libpgm/pgm.o",
+      "libpgm/pgm.c"
+    ],
+    "directory": "/home/gabriel/src/convolution",
+    "file": "/home/gabriel/src/convolution/libpgm/pgm.c",
+    "output": "/home/gabriel/src/convolution/libpgm/pgm.o"
+  }
+]

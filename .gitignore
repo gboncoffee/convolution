@@ -1,0 +1,4 @@
+.cache/*
+lbp
+*.o
+libpgm/*.o
