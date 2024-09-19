@@ -39,7 +39,7 @@ int readPGMMetadata(PGM *pgm, FILE *fp, PGMType type) {
     do {
         c = getc(fp);
         if (c == EOF) return EDOM;
-    } while (c != ' ' && c != '\t' && c != '\n' && c != '\r');
+    } while (c == ' ' || c == '\t' || c == '\n' || c == '\r');
     ungetc(c, fp);
 
     if (fscanf(fp, "%hd", &pgm->height) != 1) return errno;
