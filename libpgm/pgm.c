@@ -8,9 +8,16 @@
 #include <string.h>
 
 int readPGMAsciiData(PGM *pgm, FILE *fp) {
-    (void)pgm;
-    (void)fp;
-    assert(0 && "Not implemented.");
+    size_t size = pgm->width * pgm->height;
+    size_t i;
+
+    pgm->data = malloc(sizeof(uint16_t) * size);
+    if (pgm->data == NULL) return errno;
+
+    for (i = 0; i < size; i++) {
+        if (fscanf(fp, "%hu", &pgm->data[i]) != 1) return errno;
+    }
+
     return 0;
 }
 
@@ -104,7 +111,7 @@ int writePGMBinary(PGM *pgm, FILE *fp) {
     size_t size = pgm->width * pgm->height;
     size_t i;
 
-    fprintf(fp, "P5\n%hd %hd\n%hd\n", pgm->width, pgm->height, pgm->maxVal);
+    fprintf(fp, "P5\n%hu %hu\n%hu\n", pgm->width, pgm->height, pgm->maxVal);
 
     /* Again we have to check if it should be a byte-size PGM or a word-size. */
     if (pgm->maxVal > UINT8_MAX) {
@@ -121,9 +128,18 @@ int writePGMBinary(PGM *pgm, FILE *fp) {
 }
 
 int writePGMAscii(PGM *pgm, FILE *fp) {
-    (void)pgm;
-    (void)fp;
-    assert(0 && "Not implemented.");
+    size_t i, j;
+
+    fprintf(fp, "P2\n%hu %hu\n%hu\n", pgm->width, pgm->height, pgm->maxVal);
+
+    for (i = 0; i < pgm->height; i++) {
+        /* I don't know why but the compiler complains about (pgm->width - 1)
+         * beign signed. */
+        for (j = 0; j < (uint16_t) (pgm->width - 1); j++)
+            fprintf(fp, "%hu ", pgm->data[i * pgm->width + j]);
+        fprintf(fp, "%hu\n", pgm->data[((i + 1) * pgm->width) - 1]);
+    }
+
     return 0;
 }
 
@@ -142,14 +158,59 @@ int WritePGM(PGM *pgm, const char *filePath, PGMType type) {
     return ret;
 }
 
-int InitPGM(PGM *pgm, uint16_t width, uint16_t height) {
+int InitPGM(PGM *pgm, uint16_t width, uint16_t height, uint16_t maxVal) {
     pgm->height = height;
     pgm->width = width;
+    pgm->maxVal = maxVal;
 
-    pgm->data = malloc(sizeof(uint16_t) * width * height);
+    pgm->data = calloc(width * height, sizeof(uint16_t));
     if (pgm->data == NULL) return errno;
 
     return 0;
 }
 
 void FreePGM(PGM *pgm) { free(pgm->data); }
+
+int SetPGMPixel(PGM *pgm, uint16_t row, uint16_t column, uint16_t pixel) {
+    if (row <= pgm->height || column <= pgm->width) return 1;
+    pgm->data[row * pgm->width + column] = pixel;
+
+    if (pixel > pgm->maxVal) pgm->maxVal = pixel;
+
+    return 0;
+}
+
+uint16_t GetPGMHeight(PGM *pgm) { return pgm->height; }
+uint16_t GetPGMWidth(PGM *pgm) { return pgm->width; }
+uint16_t GetPGMMaxVal(PGM *pgm) { return pgm->maxVal; }
+void SetPGMMaxVal(PGM *pgm, uint16_t maxVal) { pgm->maxVal = maxVal; }
+
+int GetPGMPixelNormalized(PGM *pgm, uint16_t row, uint16_t column,
+                          uint16_t *pixel) {
+    if (row <= pgm->height || column <= pgm->width) return 1;
+
+    *pixel = RENORMALIZE(pgm->data[row * pgm->width + column], pgm->maxVal,
+                         UINT16_MAX);
+
+    return 0;
+}
+
+int SetPGMPixelNormalized(PGM *pgm, uint16_t row, uint16_t column,
+                          uint16_t pixel) {
+    if (row <= pgm->height || column <= pgm->width) return 1;
+
+    pgm->data[row * pgm->width + column] =
+        RENORMALIZE(pixel, UINT16_MAX, pgm->maxVal);
+
+    return 0;
+}
+
+void NormalizePGMToNewMaxVal(PGM *pgm, uint16_t maxVal) {
+    size_t size = pgm->width * pgm->height;
+    size_t i;
+
+    for (i = 0; i < size; i++)
+        pgm->data[i] = RENORMALIZE(pgm->data[i], pgm->maxVal, maxVal);
+
+    pgm->maxVal = maxVal;
+}
