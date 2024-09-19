@@ -8,8 +8,6 @@
 
 #include <stdint.h>
 
-#define MAX_PGM_VALUE (UINT16_MAX)
-
 typedef enum { P2, P5 } PGMType;
 
 typedef struct {

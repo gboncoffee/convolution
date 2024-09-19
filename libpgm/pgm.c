@@ -47,8 +47,8 @@ int readPGMMetadata(PGM *pgm, FILE *fp, PGMType type) {
     } while (c == ' ' || c == '\t' || c == '\n' || c == '\r');
     ungetc(c, fp);
 
-    if (fscanf(fp, "%hu", &pgm->height) != 1) return errno;
     if (fscanf(fp, "%hu", &pgm->width) != 1) return errno;
+    if (fscanf(fp, "%hu", &pgm->height) != 1) return errno;
     if (fscanf(fp, "%hu", &pgm->maxVal) != 1) return errno;
 
     if (pgm->maxVal == 0) return (errno = EDOM);
@@ -101,7 +101,7 @@ int ReadPGM(PGM *pgm, const char *filePath) {
 }
 
 int writePGMBinary(PGM *pgm, FILE *fp) {
-    uint16_t size = pgm->width * pgm->height;
+    size_t size = pgm->width * pgm->height;
     size_t i;
 
     fprintf(fp, "P5\n%hd %hd\n%hd\n", pgm->width, pgm->height, pgm->maxVal);

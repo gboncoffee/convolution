@@ -6,7 +6,7 @@
 int main(void) {
     PGM pgm;
     assert(ReadPGM(&pgm, "img/Apuleia1.pgm") == 0);
-    assert(WritePGM(&pgm, "pgm-teste.pgm", P5));
+    assert(WritePGM(&pgm, "pgm-teste.pgm", P5) == 0);
 
     FreePGM(&pgm);
 

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -ansi -pedantic
+CFLAGS = -Wall -Wextra -ansi -pedantic -g
 
 lbp: libpgm/pgm.o main.o
 	$(CC) $(CFLAGS) $^ -o $@
