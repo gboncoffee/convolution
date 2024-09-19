@@ -1,11 +1,11 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -ansi -pedantic
 
-lbp: liblbp/liblbp.o main.o
+lbp: libpgm/libpgm.o main.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
-liblbp/%.o: liblbp/%.c
+libpgm/%.o: libpgm/%.c
 	$(CC) $(CFLAGS) -c $^ -o $@
