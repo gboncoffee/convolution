@@ -11,6 +11,14 @@
 			"program": "${workspaceFolder}/lbp",
 			"args": [],
 			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug image gen",
+			"program": "${workspaceFolder}/lbp",
+			"args": ["-i", "lena.pgm", "-o", "lena-lbp.pgm"],
+			"cwd": "${workspaceFolder}"
 		}
 	]
 }
