@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     PGM lbpImage;
     int ret;
 
+    /* Quick rant: getopt leaks memory. I f*cking HATE that. */
     char nextOpt;
     while ((nextOpt = getopt(argc, argv, "i:o:d:")) != -1) {
         switch (nextOpt) {
@@ -40,7 +41,12 @@ int main(int argc, char *argv[]) {
         ret = WritePGM(&lbpImage, outputImage, P5);
         if (ret != 0) return ret;
     }
-    if (baseDirectory != NULL) assert(0 && "Not implemented.");
+    if (baseDirectory != NULL) {
+        ret = SearchBaseDirectory(baseDirectory, inputImage, outputImage, &lbpImage);
+        if (ret != 0) return ret;
+    }
+
+    FreePGM(&lbpImage);
 
     return 0;
 }
