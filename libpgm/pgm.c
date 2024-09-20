@@ -1,11 +1,9 @@
 #include "pgm.h"
 
-#include <assert.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 int readPGMAsciiData(PGM *pgm, FILE *fp) {
     size_t size = pgm->width * pgm->height;
@@ -135,7 +133,7 @@ int writePGMAscii(PGM *pgm, FILE *fp) {
     for (i = 0; i < pgm->height; i++) {
         /* I don't know why but the compiler complains about (pgm->width - 1)
          * beign signed. */
-        for (j = 0; j < (uint16_t) (pgm->width - 1); j++)
+        for (j = 0; j < (uint16_t)(pgm->width - 1); j++)
             fprintf(fp, "%hu ", pgm->data[i * pgm->width + j]);
         fprintf(fp, "%hu\n", pgm->data[((i + 1) * pgm->width) - 1]);
     }
@@ -171,8 +169,9 @@ int InitPGM(PGM *pgm, uint16_t width, uint16_t height, uint16_t maxVal) {
 
 void FreePGM(PGM *pgm) { free(pgm->data); }
 
-int SetPGMPixel(PGM *pgm, uint16_t row, uint16_t column, uint16_t pixel) {
-    if (row <= pgm->height || column <= pgm->width) return 1;
+int SetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t pixel) {
+    if (pgm->height >= row || pgm->width >= column || row <= 0 || column <= 0)
+        return 1;
     pgm->data[row * pgm->width + column] = pixel;
 
     if (pixel > pgm->maxVal) pgm->maxVal = pixel;
@@ -185,9 +184,19 @@ uint16_t GetPGMWidth(PGM *pgm) { return pgm->width; }
 uint16_t GetPGMMaxVal(PGM *pgm) { return pgm->maxVal; }
 void SetPGMMaxVal(PGM *pgm, uint16_t maxVal) { pgm->maxVal = maxVal; }
 
-int GetPGMPixelNormalized(PGM *pgm, uint16_t row, uint16_t column,
+int GetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t *pixel) {
+    if (pgm->height >= row || pgm->width >= column || row <= 0 || column <= 0)
+        return 1;
+
+    *pixel = pgm->data[row * pgm->width + column];
+
+    return 0;
+}
+
+int GetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
                           uint16_t *pixel) {
-    if (row <= pgm->height || column <= pgm->width) return 1;
+    if (pgm->height >= row || pgm->width >= column || row <= 0 || column <= 0)
+        return 1;
 
     *pixel = RENORMALIZE(pgm->data[row * pgm->width + column], pgm->maxVal,
                          UINT16_MAX);
@@ -195,9 +204,10 @@ int GetPGMPixelNormalized(PGM *pgm, uint16_t row, uint16_t column,
     return 0;
 }
 
-int SetPGMPixelNormalized(PGM *pgm, uint16_t row, uint16_t column,
+int SetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
                           uint16_t pixel) {
-    if (row <= pgm->height || column <= pgm->width) return 1;
+    if (pgm->height >= row || pgm->width >= column || row <= 0 || column <= 0)
+        return 1;
 
     pgm->data[row * pgm->width + column] =
         RENORMALIZE(pixel, UINT16_MAX, pgm->maxVal);

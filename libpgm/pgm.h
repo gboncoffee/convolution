@@ -31,12 +31,14 @@ void FreePGM(PGM *pgm);
 /* Returns 1 on allocation error. */
 int InitPGM(PGM *pgm, uint16_t width, uint16_t height, uint16_t maxVal);
 
-/* Returns 1 if passing invalid row or column. */
-int SetPGMPixel(PGM *pgm, uint16_t row, uint16_t column, uint16_t pixel);
-int GetPGMPixelNormalized(PGM *pgm, uint16_t row, uint16_t column,
+/* Returns 1 if passing invalid row or column. Using signed integers here allow
+ * for some INCREDIBLE optimizations. */
+int SetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t pixel);
+int GetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t *pixel);
+int GetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
                           uint16_t *pixel);
 
-int SetPGMPixelNormalized(PGM *pgm, uint16_t row, uint16_t column,
+int SetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
                           uint16_t pixel);
 
 uint16_t GetPGMHeight(PGM *pgm);
