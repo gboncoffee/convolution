@@ -6,6 +6,7 @@
       "-Wextra",
       "-ansi",
       "-pedantic",
+      "-g",
       "-c",
       "-o",
       "libpgm/pgm.o",
@@ -14,5 +15,39 @@
     "directory": "/home/gabriel/src/convolution",
     "file": "/home/gabriel/src/convolution/libpgm/pgm.c",
     "output": "/home/gabriel/src/convolution/libpgm/pgm.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-ansi",
+      "-pedantic",
+      "-g",
+      "-c",
+      "-o",
+      "main.o",
+      "main.c"
+    ],
+    "directory": "/home/gabriel/src/convolution",
+    "file": "/home/gabriel/src/convolution/main.c",
+    "output": "/home/gabriel/src/convolution/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-ansi",
+      "-pedantic",
+      "-g",
+      "-c",
+      "-o",
+      "lbp.o",
+      "lbp.c"
+    ],
+    "directory": "/home/gabriel/src/convolution",
+    "file": "/home/gabriel/src/convolution/lbp.c",
+    "output": "/home/gabriel/src/convolution/lbp.o"
   }
 ]
