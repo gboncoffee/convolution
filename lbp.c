@@ -114,12 +114,17 @@ int GetImageVector(char *path, uint8_t *vector) {
     FILE *fp;
     int ret;
     if (makeSamePathWithLBPExtension(path, &lbpPath) > 0) return errno;
+    if (!strcmp(path, lbpPath)) {
+        free(lbpPath);
+        return -1;
+    }
 
     fp = fopen(lbpPath, "r");
     if (fp == NULL) {
         /* This error should simply be ignored because we may be trying to
          * search a file or something. */
         if (computeImageVector(path, vector)) {
+            errno = 0;
             free(lbpPath);
             return -1;
         }
@@ -131,6 +136,7 @@ int GetImageVector(char *path, uint8_t *vector) {
         fclose(fp);
         /* Same. */
         if (computeImageVector(path, vector)) {
+            errno = 0;
             free(lbpPath);
             return -1;
         }
@@ -146,19 +152,19 @@ int GetImageVector(char *path, uint8_t *vector) {
 
 int getDistance(char *path, uint8_t *baseVector, double *newDistance) {
     size_t i;
-    int64_t distance;
+    double distance;
     int64_t cur;
     int ret;
     uint8_t *newVector = malloc(256);
     if (newVector == NULL) return errno;
 
-    /* If GetImageVector returns EDOM, it means the path is not a PGM.*/
     ret = GetImageVector(path, newVector);
-    if (ret == EDOM || ret < 0) {
+    if (ret < 0) {
+        /* Path is not a PGM.*/
         errno = 0;
         free(newVector);
         return -1;
-    } else if (ret != 0) {
+    } else if (ret) {
         free(newVector);
         return errno;
     }
@@ -171,8 +177,7 @@ int getDistance(char *path, uint8_t *baseVector, double *newDistance) {
         distance += cur;
     }
 
-    *newDistance = sqrt((double)distance);
-    printf("%s %f\n", path, *newDistance);
+    *newDistance = sqrt(distance);
 
     free(newVector);
     return 0;
@@ -218,7 +223,6 @@ int SearchBaseDirectory(char *baseDirectory, uint8_t *inputImageVector,
             strcpy(nearestFileName, ep->d_name);
             nearestDistance = newDistance;
         }
-        errno = 0;
     }
 
     if (nearestFileName[0] != '\0') {
