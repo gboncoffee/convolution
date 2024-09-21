@@ -1,0 +1,12 @@
+O diretório libpgm contém uma biblioteca para lidar com imagens PGM. Os arquivos
+lbp.c e lbp.h implementam e definem as funções utilizadas pela main, e o arquivo
+main.c possui somente a main.
+
+O lbp.c implementa a busca em base de dados pela menor distância, o "cache" com
+arquivos .lbp, o cálculo da distância e a geração das imagens LBP.
+
+Acredito que o tratamento de erros e o código que lida com o acesso ao diretório
+e manipulação das strings que representam caminhos no sistema de arquivos está
+mais feio que o necessário, provavelmente existe espaço para melhora. Eu também
+acredito que seja possível fazer menos alocações e simplificar a administração
+da memória.
