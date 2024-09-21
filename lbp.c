@@ -53,7 +53,7 @@ int GenerateLBPImage(char *inputFile, PGM *outputImage) {
 
     if (ReadPGM(&inputImage, inputFile)) return errno;
     if (InitPGM(outputImage, GetPGMWidth(&inputImage),
-                GetPGMHeight(&inputImage), GetPGMMaxVal(&inputImage)))
+                GetPGMHeight(&inputImage), 255))
         return errno;
 
     generateLBP(&inputImage, outputImage);
@@ -73,7 +73,7 @@ int computeImageVector(char *path, uint8_t *vector) {
     for (i = 0; i < GetPGMHeight(&image); i++) {
         for (j = 0; j < GetPGMWidth(&image); j++) {
             GetPGMPixel(&image, i, j, &pixel);
-            vector[(uint8_t)pixel]++;
+            vector[pixel]++;
         }
     }
 
@@ -171,83 +171,50 @@ int getDistance(char *path, uint8_t *baseVector, double *newDistance) {
         distance += cur;
     }
 
-    *newDistance = sqrt((double) distance);
+    *newDistance = sqrt((double)distance);
+    printf("%s %f\n", path, *newDistance);
 
     free(newVector);
     return 0;
 }
 
-char *makeRelPathBuffer(char *baseDirectory, size_t *relPathBufferSize,
-                        size_t *baseDirLen) {
-    char *relPath;
-    /* This strlen() should be safe as baseDirectory should be an argument. */
-    *baseDirLen = strlen(baseDirectory);
-    relPath = malloc(*baseDirLen + 256);
-    if (relPath == NULL) return NULL;
-    *relPathBufferSize = *baseDirLen + 256;
-
-    /* Again should be safe. */
-    strcpy(relPath, baseDirectory);
-
-    /* If our baseDirectory string doesn't have a / in the end, add it. */
-    if (relPath[*baseDirLen - 1] != '/') {
-        relPath[*baseDirLen] = '/';
-        relPath[*baseDirLen + 1] = '\0';
-        (*baseDirLen)++;
-    }
-
-    return relPath;
-}
-
-int SearchBaseDirectory(char *baseDirectory, uint8_t *inputImageVector, char **fileName, double *distance) {
+int SearchBaseDirectory(char *baseDirectory, uint8_t *inputImageVector,
+                        char *nearestFileName, double *distance) {
     struct dirent *ep;
     char *relPath;
-    char *nearestFileName;
     double nearestDistance;
     double newDistance;
-    size_t relPathBufferSize;
-    size_t entryPathSize;
-    size_t baseDirLen;
-    size_t nearestFileNameSize;
+    int ret;
+    size_t baseDirLen = strlen(baseDirectory);
 
     DIR *dp = opendir(baseDirectory);
     if (dp == NULL) return errno;
 
-    /* To avoid too much allocations, let's allocate a string with an arbitrary
-     * size and if needed we reallocate.*/
-    relPath = makeRelPathBuffer(baseDirectory, &relPathBufferSize, &baseDirLen);
-    if (relPath == NULL) goto cleanup_dp;
-
-    /* We'll be doing the same with the nearestFileName buffer. */
-    nearestFileName = calloc(relPathBufferSize, 1);
-    if (nearestFileName == NULL) goto cleanup_rel_path;
-    nearestFileNameSize = relPathBufferSize;
+    relPath = calloc(baseDirLen + 258, 1);
+    if (relPath == NULL) {
+        ret = errno;
+        goto cleanup_dp;
+    }
+    strcpy(relPath, baseDirectory);
+    if (relPath[baseDirLen - 1] != '/') {
+        relPath[baseDirLen] = '/';
+        relPath[baseDirLen + 1] = '\0';
+        baseDirLen++;
+    }
 
     /* Init the distance with HUGE_VAL for obvious reasons. */
     nearestDistance = HUGE_VAL;
 
     /* Iterate checking the distance. */
     while ((ep = readdir(dp))) {
-        entryPathSize = strlen(ep->d_name);
-        if (entryPathSize + baseDirLen + 1 > relPathBufferSize) {
-            relPath = realloc(relPath, entryPathSize + baseDirLen + 1);
-            if (relPath == NULL) {
-                free(nearestFileName);
-                goto cleanup_dp;
-            }
-        }
         /* strcat doesn't work because there's nothing saying there's a null at
-         * relPath[baseDirLen + 1]. We're creating the file names by hand! */
+         * relPath[baseDirLen]. We're creating the file names by hand! */
         strcpy(&relPath[baseDirLen], ep->d_name);
 
-        if (getDistance(relPath, inputImageVector, &newDistance) > 0)
-            goto cleanup_all;
-        if (newDistance < nearestDistance) {
-            if (entryPathSize >= nearestFileNameSize) {
-                nearestFileName = realloc(nearestFileName, entryPathSize + 1);
-                if (nearestFileName == NULL) goto cleanup_rel_path;
-                nearestFileNameSize = entryPathSize + 1;
-            }
+        ret = getDistance(relPath, inputImageVector, &newDistance);
+        if (ret > 0) {
+            goto cleanup_rel_path;
+        } else if (ret == 0 && newDistance < nearestDistance) {
             strcpy(nearestFileName, ep->d_name);
             nearestDistance = newDistance;
         }
@@ -255,17 +222,16 @@ int SearchBaseDirectory(char *baseDirectory, uint8_t *inputImageVector, char **f
     }
 
     if (nearestFileName[0] != '\0') {
-        *fileName = nearestFileName;
         *distance = nearestDistance;
-        goto cleanup_rel_path;
+        ret = 0;
+    } else {
+        ret = -1;
     }
 
-cleanup_all:
-    free(nearestFileName);
 cleanup_rel_path:
     free(relPath);
 cleanup_dp:
     closedir(dp);
 
-    return errno;
+    return ret;
 }

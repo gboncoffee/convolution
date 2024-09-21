@@ -14,9 +14,9 @@ int main(int argc, char *argv[]) {
     char *inputImage = NULL;
     char *outputImage = NULL;
     char *baseDirectory = NULL;
-    char *nearestFileName;
-    double nearestDistance;
-    uint8_t *inputImageVector;
+    double nearestDistance = 0;
+    uint8_t inputImageVector[256] = {0};
+    char nearestFileName[257] = {0};
     PGM lbpImage;
     int ret;
 
@@ -48,25 +48,13 @@ int main(int argc, char *argv[]) {
         if (ret != 0) return ret;
     }
     if (baseDirectory != NULL) {
-        inputImageVector = malloc(256);
-        if (inputImageVector == NULL) return errno;
-
         ret = GetImageVector(inputImage, inputImageVector);
-        if (ret != 0) {
-            free(inputImageVector);
-            return ret;
-        }
+        if (ret != 0) return ret;
         ret = SearchBaseDirectory(baseDirectory, inputImageVector,
-                                  &nearestFileName, &nearestDistance);
-        if (ret != 0) {
-            free(inputImageVector);
-            return ret;
-        }
-
+                                  nearestFileName, &nearestDistance);
+        if (ret != 0) return ret;
         printf("Imagem mais similar: %s %.6f\n", nearestFileName,
                nearestDistance);
-        free(inputImageVector);
-        free(nearestFileName);
     }
 
     return 0;

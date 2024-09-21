@@ -25,7 +25,7 @@
 			"request": "launch",
 			"name": "Debug base comp",
 			"program": "${workspaceFolder}/lbp",
-			"args": ["-d", "./img", "-i", "Apuleia1.pgm"],
+			"args": ["-d", "./img", "-i", "img/Apuleia1.pgm"],
 			"cwd": "${workspaceFolder}"
 		}
 	]
