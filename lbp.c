@@ -77,6 +77,8 @@ int computeImageVector(char *path, uint8_t *vector) {
         }
     }
 
+    FreePGM(&image);
+
     return 0;
 }
 
@@ -110,24 +112,34 @@ int saveVectorFile(char *lbpPath, uint8_t *vector) {
 int GetImageVector(char *path, uint8_t *vector) {
     char *lbpPath = NULL;
     FILE *fp;
+    int ret;
     if (makeSamePathWithLBPExtension(path, &lbpPath) > 0) return errno;
 
     fp = fopen(lbpPath, "r");
     if (fp == NULL) {
         /* This error should simply be ignored because we may be trying to
          * search a file or something. */
-        if (computeImageVector(path, vector))
+        if (computeImageVector(path, vector)) {
+            free(lbpPath);
             return -1;
-        return saveVectorFile(lbpPath, vector);
+        }
+        ret = saveVectorFile(lbpPath, vector);
+        free(lbpPath);
+        return ret;
     }
     if (fread(vector, 1, 256, fp) != 256) {
         fclose(fp);
         /* Same. */
-        if (computeImageVector(path, vector))
+        if (computeImageVector(path, vector)) {
+            free(lbpPath);
             return -1;
-        return saveVectorFile(lbpPath, vector);
+        }
+        ret = saveVectorFile(lbpPath, vector);
+        free(lbpPath);
+        return ret;
     }
 
+    fclose(fp);
     free(lbpPath);
     return 0;
 }
@@ -144,8 +156,10 @@ int getDistance(char *path, uint8_t *baseVector, double *newDistance) {
     ret = GetImageVector(path, newVector);
     if (ret == EDOM || ret < 0) {
         errno = 0;
+        free(newVector);
         return -1;
     } else if (ret != 0) {
+        free(newVector);
         return errno;
     }
 

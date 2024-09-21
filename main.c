@@ -65,6 +65,8 @@ int main(int argc, char *argv[]) {
 
         printf("Imagem mais similar: %s %.6f\n", nearestFileName,
                nearestDistance);
+        free(inputImageVector);
+        free(nearestFileName);
     }
 
     return 0;
