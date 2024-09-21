@@ -45,15 +45,24 @@ int readPGMBinaryData(PGM *pgm, FILE *fp) {
 
 int readPGMMetadata(PGM *pgm, FILE *fp, PGMType type) {
     char c;
-    /* Skip whitespace as required by PGM specs. */
+    /* Skip whitespace and comment lines as required by PGM specs. */
     do {
         c = getc(fp);
-        if (c == EOF) return EDOM;
+        switch (c) {
+            case EOF:
+                return EDOM;
+                break;
+            case '#':
+                do {
+                    c = getc(fp);
+                    if (c == EOF) return EDOM;
+                } while (c != '\n');
+        }
     } while (c == ' ' || c == '\t' || c == '\n' || c == '\r');
     ungetc(c, fp);
 
-    if (fscanf(fp, "%hu", &pgm->width) != 1) return errno;
-    if (fscanf(fp, "%hu", &pgm->height) != 1) return errno;
+    if (fscanf(fp, "%lu", &pgm->width) != 1) return errno;
+    if (fscanf(fp, "%lu", &pgm->height) != 1) return errno;
     if (fscanf(fp, "%hu", &pgm->maxVal) != 1) return errno;
 
     if (pgm->maxVal == 0) return (errno = EDOM);
@@ -109,7 +118,7 @@ int writePGMBinary(PGM *pgm, FILE *fp) {
     size_t size = pgm->width * pgm->height;
     size_t i;
 
-    fprintf(fp, "P5\n%hu %hu\n%hu\n", pgm->width, pgm->height, pgm->maxVal);
+    fprintf(fp, "P5\n%lu %lu\n%hu\n", pgm->width, pgm->height, pgm->maxVal);
 
     /* Again we have to check if it should be a byte-size PGM or a word-size. */
     if (pgm->maxVal > UINT8_MAX) {
@@ -128,12 +137,12 @@ int writePGMBinary(PGM *pgm, FILE *fp) {
 int writePGMAscii(PGM *pgm, FILE *fp) {
     size_t i, j;
 
-    fprintf(fp, "P2\n%hu %hu\n%hu\n", pgm->width, pgm->height, pgm->maxVal);
+    fprintf(fp, "P2\n%lu %lu\n%hu\n", pgm->width, pgm->height, pgm->maxVal);
 
     for (i = 0; i < pgm->height; i++) {
         /* I don't know why but the compiler complains about (pgm->width - 1)
          * beign signed. */
-        for (j = 0; j < (uint16_t)(pgm->width - 1); j++)
+        for (j = 0; j < pgm->width - 1; j++)
             fprintf(fp, "%hu ", pgm->data[i * pgm->width + j]);
         fprintf(fp, "%hu\n", pgm->data[((i + 1) * pgm->width) - 1]);
     }
@@ -153,10 +162,12 @@ int WritePGM(PGM *pgm, const char *filePath, PGMType type) {
     else
         ret = writePGMBinary(pgm, fp);
 
+    fclose(fp);
+
     return ret;
 }
 
-int InitPGM(PGM *pgm, uint16_t width, uint16_t height, uint16_t maxVal) {
+int InitPGM(PGM *pgm, uint64_t width, uint64_t height, uint16_t maxVal) {
     pgm->height = height;
     pgm->width = width;
     pgm->maxVal = maxVal;
@@ -169,8 +180,9 @@ int InitPGM(PGM *pgm, uint16_t width, uint16_t height, uint16_t maxVal) {
 
 void FreePGM(PGM *pgm) { free(pgm->data); }
 
-int SetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t pixel) {
-    if (pgm->height <= row || pgm->width <= column || row < 0 || column < 0)
+int SetPGMPixel(PGM *pgm, int64_t row, int64_t column, uint16_t pixel) {
+    if (pgm->height <= ((uint64_t)row) || pgm->width <= ((uint64_t)column) ||
+        row < 0 || column < 0)
         return 1;
     pgm->data[row * pgm->width + column] = pixel;
 
@@ -184,8 +196,9 @@ uint16_t GetPGMWidth(PGM *pgm) { return pgm->width; }
 uint16_t GetPGMMaxVal(PGM *pgm) { return pgm->maxVal; }
 void SetPGMMaxVal(PGM *pgm, uint16_t maxVal) { pgm->maxVal = maxVal; }
 
-int GetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t *pixel) {
-    if (pgm->height <= row || pgm->width <= column || row < 0 || column < 0)
+int GetPGMPixel(PGM *pgm, int64_t row, int64_t column, uint16_t *pixel) {
+    if (pgm->height <= ((uint64_t)row) || pgm->width <= ((uint64_t)column) ||
+        row < 0 || column < 0)
         return 1;
 
     *pixel = pgm->data[row * pgm->width + column];
@@ -193,9 +206,10 @@ int GetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t *pixel) {
     return 0;
 }
 
-int GetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
+int GetPGMPixelNormalized(PGM *pgm, int64_t row, int64_t column,
                           uint16_t *pixel) {
-    if (pgm->height <= row || pgm->width <= column || row < 0 || column < 0)
+    if (pgm->height <= ((uint64_t)row) || pgm->width <= ((uint64_t)column) ||
+        row < 0 || column < 0)
         return 1;
 
     *pixel = RENORMALIZE(pgm->data[row * pgm->width + column], pgm->maxVal,
@@ -204,9 +218,10 @@ int GetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
     return 0;
 }
 
-int SetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
+int SetPGMPixelNormalized(PGM *pgm, int64_t row, int64_t column,
                           uint16_t pixel) {
-    if (pgm->height <= row || pgm->width <= column || row < 0 || column < 0)
+    if (pgm->height <= ((uint64_t)row) || pgm->width <= ((uint64_t)column) ||
+        row < 0 || column < 0)
         return 1;
 
     pgm->data[row * pgm->width + column] =

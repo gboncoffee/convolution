@@ -10,8 +10,8 @@
 #include "libpgm/pgm.h"
 
 void generateLBP(PGM *inputImage, PGM *outputImage) {
-    uint16_t i, j;
-    int16_t ni, nj;
+    uint64_t i, j;
+    int64_t ni, nj;
     const uint16_t mask[3][3] = {{1, 2, 4}, {8, 0, 16}, {32, 64, 128}};
     uint16_t pixel;
     uint16_t neighbour;
@@ -25,8 +25,8 @@ void generateLBP(PGM *inputImage, PGM *outputImage) {
      * neighbours. Set >=, multiply by the mask. Sum everything in result.
      */
 
-    for (i = 0; i < inputImage->width; i++) {
-        for (j = 0; j < outputImage->height; j++) {
+    for (i = 0; i < inputImage->height; i++) {
+        for (j = 0; j < outputImage->width; j++) {
             /* Guaranteed to not fail. */
             GetPGMPixel(inputImage, i, j, &pixel);
             result = 0;

@@ -7,13 +7,14 @@
  */
 
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef enum { P2, P5 } PGMType;
 
 typedef struct {
     uint16_t *data;
-    uint16_t width;
-    uint16_t height;
+    uint64_t width;
+    uint64_t height;
     uint16_t maxVal;
 } PGM;
 
@@ -29,16 +30,16 @@ int WritePGM(PGM *pgm, const char *filePath, PGMType type);
 void FreePGM(PGM *pgm);
 
 /* Returns 1 on allocation error. */
-int InitPGM(PGM *pgm, uint16_t width, uint16_t height, uint16_t maxVal);
+int InitPGM(PGM *pgm, uint64_t width, uint64_t height, uint16_t maxVal);
 
 /* Returns 1 if passing invalid row or column. Using signed integers here allow
  * for some INCREDIBLE optimizations. */
-int SetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t pixel);
-int GetPGMPixel(PGM *pgm, int16_t row, int16_t column, uint16_t *pixel);
-int GetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
+int SetPGMPixel(PGM *pgm, int64_t row, int64_t column, uint16_t pixel);
+int GetPGMPixel(PGM *pgm, int64_t row, int64_t column, uint16_t *pixel);
+int GetPGMPixelNormalized(PGM *pgm, int64_t row, int64_t column,
                           uint16_t *pixel);
 
-int SetPGMPixelNormalized(PGM *pgm, int16_t row, int16_t column,
+int SetPGMPixelNormalized(PGM *pgm, int64_t row, int64_t column,
                           uint16_t pixel);
 
 uint16_t GetPGMHeight(PGM *pgm);
