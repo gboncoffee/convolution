@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 /* ANSI C does not have a unistd.h with getopt. */
@@ -13,10 +14,12 @@ int main(int argc, char *argv[]) {
     char *inputImage = NULL;
     char *outputImage = NULL;
     char *baseDirectory = NULL;
+    char *nearestFileName;
+    double nearestDistance;
+    uint8_t *inputImageVector;
     PGM lbpImage;
     int ret;
 
-    /* Quick rant: getopt leaks memory. I f*cking HATE that. */
     char nextOpt;
     while ((nextOpt = getopt(argc, argv, "i:o:d:")) != -1) {
         switch (nextOpt) {
@@ -35,18 +38,34 @@ int main(int argc, char *argv[]) {
     if (inputImage == NULL || (outputImage == NULL && baseDirectory == NULL))
         return EDOM;
     if (outputImage != NULL) {
-        ret = GenerateLBPImage(inputImage, outputImage, &lbpImage);
+        ret = GenerateLBPImage(inputImage, &lbpImage);
         if (ret != 0) return ret;
 
+        if (WritePGM(&lbpImage, outputImage, P5)) return errno;
+
         ret = WritePGM(&lbpImage, outputImage, P5);
+        FreePGM(&lbpImage);
         if (ret != 0) return ret;
     }
     if (baseDirectory != NULL) {
-        ret = SearchBaseDirectory(baseDirectory, inputImage, outputImage, &lbpImage);
-        if (ret != 0) return ret;
-    }
+        inputImageVector = malloc(256);
+        if (inputImageVector == NULL) return errno;
 
-    FreePGM(&lbpImage);
+        ret = GetImageVector(inputImage, inputImageVector);
+        if (ret != 0) {
+            free(inputImageVector);
+            return ret;
+        }
+        ret = SearchBaseDirectory(baseDirectory, inputImageVector,
+                                  &nearestFileName, &nearestDistance);
+        if (ret != 0) {
+            free(inputImageVector);
+            return ret;
+        }
+
+        printf("Imagem mais similar: %s %.6f\n", nearestFileName,
+               nearestDistance);
+    }
 
     return 0;
 }

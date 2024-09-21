@@ -19,6 +19,14 @@
 			"program": "${workspaceFolder}/lbp",
 			"args": ["-i", "lena.pgm", "-o", "lena-lbp.pgm"],
 			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug base comp",
+			"program": "${workspaceFolder}/lbp",
+			"args": ["-d", "./img", "-i", "Apuleia1.pgm"],
+			"cwd": "${workspaceFolder}"
 		}
 	]
 }
